@@ -1,0 +1,29 @@
+USE_OCAMLFIND = true
+NATIVE_ENABLED = true
+BYTE_ENABLED = true
+
+OCAMLFLAGS = -thread -g -w @A-4-29-41-44-45 -bin-annot
+OCAMLPACKS[] = unix threads
+CFLAGS = -std=gnu99 -O3 -g -Wall -Werror
+OCAML_CLIBS[] = connect
+OCAML_LINK_FLAGS = -cclib -lbluetooth -linkpkg
+#-cclib -lGeoIP
+mkdir -p _build
+vmount(-l, src, _build)
+
+.SUBDIRS: _build
+
+    section:
+        FILES[] =
+            main
+	    comm
+            protocol
+	    commands
+
+        OCamlProgram(main, $(FILES))
+
+        .DEFAULT: main
+
+    section:
+	connect.a: connect.c
+        .DEFAULT: $(StaticCLibrary connect, connect)
