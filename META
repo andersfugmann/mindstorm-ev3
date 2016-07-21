@@ -1,0 +1,4 @@
+version = "0.0.1"
+description = "Lego mindstorm ev3 interface"
+archive(byte) = "mindstorm_ev3.cma"
+archive(native) = "mindstorm.cmxa"

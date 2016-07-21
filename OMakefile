@@ -1,29 +1,40 @@
-USE_OCAMLFIND = true
+USE_OCAMLFIND = false
+
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
 OCAMLFLAGS = -thread -g -w @A-4-29-41-44-45 -bin-annot
-OCAMLPACKS[] = unix threads
-CFLAGS = -std=gnu99 -O3 -g -Wall -Werror
-OCAML_CLIBS[] = connect
-OCAML_LINK_FLAGS = -cclib -lbluetooth -linkpkg
-#-cclib -lGeoIP
+OCAML_OTHER_LIBS = unix threads
+
 mkdir -p _build
 vmount(-l, src, _build)
 
 .SUBDIRS: _build
 
     section:
+        StaticCLibrary(connect, connect)
+
+    section:
         FILES[] =
-            main
 	    comm
             protocol
 	    commands
 
-        OCamlProgram(main, $(FILES))
+	OCAML_LIB_FLAGS = -cclib -lbluetooth connect.a
+	OCamlLibrary(mindstorm-ev3, $(FILES))
 
-        .DEFAULT: main
+	# Require connect to be build prior to linking connect.a
+	comm.ml: connect.a
+
+	.PHONY: install uninstall
+	install: uninstall mindstorm-ev3.cmxa mindstorm-ev3.cma $(addsuffix .cmi, $(FILES))
+		ocamlfind install mindstorm-ev3 ../META mindstorm-ev3* $(addsuffix .cmi, $(FILES))
+
+	uninstall:
+		ocamlfind remove mindstorm-ev3 || true
 
     section:
-	connect.a: connect.c
-        .DEFAULT: $(StaticCLibrary connect, connect)
+	OCAML_LIBS += mindstorm-ev3
+        OCamlProgram(main, main)
+
+        .DEFAULT: main
