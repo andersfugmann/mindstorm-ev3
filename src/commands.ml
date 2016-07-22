@@ -1,3 +1,6 @@
+let sleepf sec =
+  ignore (Unix.select [] [] [] sec)
+
 let message_id = ref 0
 (* Helper to construct a send function *)
 let helper spec ~sync opcode =
@@ -30,7 +33,7 @@ module Sound = struct
       Comm.send conn msg;
       Comm.recv conn;
 
-      Thread.delay (((float) ms) /. 1000.0)
+      sleepf (((float) ms) /. 1000.0)
 end
 
 module Output = struct

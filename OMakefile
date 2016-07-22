@@ -3,9 +3,13 @@ USE_OCAMLFIND = false
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
-OCAMLFLAGS = -thread -g -w @A-4-29-41-44-45 -bin-annot
-OCAML_OTHER_LIBS = unix threads
+CC_CONFIG = $(shell $(OCAMLC) -config | grep bytecomp_c_compiler:)
+CC = $(nth 1, $(CC_CONFIG))
+CFLAGS = $(nth-tl 2, $(CC_CONFIG))
+CFLAGS += -I$(shell $(OCAMLC) -where)
 
+OCAMLFLAGS = -g -w @A-4-29-41-44-45 -bin-annot
+OCAML_OTHER_LIBS = unix
 mkdir -p _build
 vmount(-l, src, _build)
 
@@ -20,15 +24,18 @@ vmount(-l, src, _build)
             protocol
 	    commands
 
-	OCAML_LIB_FLAGS = -cclib -lbluetooth connect.a
-	OCamlLibrary(mindstorm-ev3, $(FILES))
+	OCAML_LIB_FLAGS = -cclib -lbluetooth
 
-	# Require connect to be build prior to linking connect.a
-	comm.ml: connect.a
+	mindstorm-ev3.cmxa mindstorm-ev3.a: $(addsuffix .cmx, $(FILES)) connect.o
+		ocamlopt -a -o mindstorm-ev3.cmxa $+ $(OCAML_LIB_FLAGS)
+
+	mindstorm-ev3.cma: $(addsuffix .cmo, $(FILES)) $(addsuffix .cmo, $(FILES)) connect.o
+		ocamlc -custom -a -o $@ $+ $(OCAML_LIB_FLAGS)
+
 
 	.PHONY: install uninstall
-	install: uninstall mindstorm-ev3.cmxa mindstorm-ev3.cma $(addsuffix .cmi, $(FILES))
-		ocamlfind install mindstorm-ev3 ../META mindstorm-ev3* $(addsuffix .cmi, $(FILES))
+	install: uninstall mindstorm-ev3.cmxa mindstorm-ev3.cma
+		ocamlfind install mindstorm-ev3 ../META $(addsuffix .*, $(FILES)) mindstorm-ev3.* connect.*
 
 	uninstall:
 		ocamlfind remove mindstorm-ev3 || true
@@ -37,4 +44,4 @@ vmount(-l, src, _build)
 	OCAML_LIBS += mindstorm-ev3
         OCamlProgram(main, main)
 
-        .DEFAULT: main
+        #.DEFAULT: main
