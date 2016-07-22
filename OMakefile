@@ -24,21 +24,24 @@ vmount(-l, src, _build)
             protocol
 	    commands
 
-	OCAML_LIB_FLAGS = -cclib -lbluetooth
+	DynamicCLibrary(dllmindstorm-ev3_stubs, connect)
+	StaticCLibrary(libmindstorm-ev3_stubs, connect)
 
-	mindstorm-ev3.cmxa mindstorm-ev3.a: $(addsuffix .cmx, $(FILES)) connect.o
-		ocamlopt -a -o mindstorm-ev3.cmxa $+ $(OCAML_LIB_FLAGS)
+	OCAML_LIB_FLAGS = -cclib -lmindstorm-ev3_stubs -cclib -lbluetooth
+	OCAMLCFLAGS = -custom
 
-	mindstorm-ev3.cma: $(addsuffix .cmo, $(FILES)) $(addsuffix .cmo, $(FILES)) connect.o
-		ocamlc -custom -a -o $@ $+ $(OCAML_LIB_FLAGS)
-
+	OCamlLibrary(mindstorm-ev3, $(FILES))
 
 	.PHONY: install uninstall
-	install: uninstall mindstorm-ev3.cmxa mindstorm-ev3.cma
-		ocamlfind install mindstorm-ev3 ../META $(addsuffix .*, $(FILES)) mindstorm-ev3.* connect.*
+	install: uninstall mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
+
+		ocamlfind install mindstorm-ev3 ../META $(addsuffix .*, $(FILES)) mindstorm-ev3.* connect.* dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
 
 	uninstall:
 		ocamlfind remove mindstorm-ev3 || true
+
+	.DEFAULT: install
+
 
     section:
 	OCAML_LIBS += mindstorm-ev3
