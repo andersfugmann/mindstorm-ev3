@@ -1,4 +1,4 @@
-USE_OCAMLFIND = false
+USE_OCAMLFIND = true
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -9,7 +9,6 @@ CFLAGS = $(nth-tl 2, $(CC_CONFIG))
 CFLAGS += -I$(shell $(OCAMLC) -where)
 
 OCAMLFLAGS = -g -w @A-4-29-41-44-45 -bin-annot
-OCAML_OTHER_LIBS = unix
 mkdir -p _build
 vmount(-l, src, _build)
 
@@ -19,6 +18,7 @@ vmount(-l, src, _build)
         StaticCLibrary(connect, connect)
 
     section:
+	OCAML_OTHER_LIBS = unix
         FILES[] =
 	    comm
             protocol
@@ -30,21 +30,24 @@ vmount(-l, src, _build)
 	OCAML_LIB_FLAGS = -cclib -lmindstorm-ev3_stubs -cclib -lbluetooth
 	OCAMLCFLAGS = -custom
 
+	# Next we need to pack...
 	OCamlLibrary(mindstorm-ev3, $(FILES))
 
 	.PHONY: install uninstall
-	install: uninstall mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
+	.install.made: mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
 
-		ocamlfind install mindstorm-ev3 ../META $(addsuffix .*, $(FILES)) mindstorm-ev3.* connect.* dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
+		ocamlfind remove mindstorm-ev3 || true
+		ocamlfind install mindstorm-ev3 ../META $(addsuffix .*, $(FILES)) *mindstorm-ev3*
+		touch $@
 
+	install: .install.made
 	uninstall:
 		ocamlfind remove mindstorm-ev3 || true
 
-	.DEFAULT: install
-
-
     section:
-	OCAML_LIBS += mindstorm-ev3
+	OCAMLPACKS[] = mindstorm-ev3
+
+	main: install
         OCamlProgram(main, main)
 
-        #.DEFAULT: main
+        .DEFAULT: main
