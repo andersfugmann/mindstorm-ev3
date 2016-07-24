@@ -18,30 +18,31 @@ vmount(-l, src, _build)
         StaticCLibrary(connect, connect)
 
     section:
-	OCAML_OTHER_LIBS = unix
+        OCAML_OTHER_LIBS = unix
         FILES[] =
-	    comm
-            protocol
-	    commands
+            ev3_comm
+            ev3_protocol
+            ev3_commands
+            ev3
 
-	DynamicCLibrary(dllmindstorm-ev3_stubs, connect)
-	StaticCLibrary(libmindstorm-ev3_stubs, connect)
+        DynamicCLibrary(dllmindstorm-ev3_stubs, connect)
+        StaticCLibrary(libmindstorm-ev3_stubs, connect)
 
-	OCAML_LIB_FLAGS = -cclib -lmindstorm-ev3_stubs -cclib -lbluetooth
-	OCAMLCFLAGS = -custom
+        OCAML_LIB_FLAGS = -cclib -lmindstorm-ev3_stubs -cclib -lbluetooth
+        OCAMLCFLAGS = -custom
 
-	# Next we need to pack...
-	OCamlLibrary(mindstorm-ev3, $(FILES))
+        # Next we need to pack...
+        OCamlLibrary(mindstorm-ev3, $(FILES))
 
-	.PHONY: install uninstall
-	.install.made: mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
+        .PHONY: install uninstall
+        .install.made: mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma dllmindstorm-ev3_stubs.so libmindstorm-ev3_stubs.a
 
-		ocamlfind remove mindstorm-ev3 || true
-		ocamlfind install mindstorm-ev3 ../META $(addsuffix .*, $(FILES)) *mindstorm-ev3*
-		touch $@
+                ocamlfind remove mindstorm-ev3 || true
+                ocamlfind install mindstorm-ev3 ../META $(addsuffix .c*, $(FILES)) *mindstorm-ev3*
+                touch $@
 
-	install: .install.made
-	uninstall:
+        install: .install.made
+        uninstall:
 		ocamlfind remove mindstorm-ev3 || true
 
     section:

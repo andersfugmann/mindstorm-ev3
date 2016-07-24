@@ -1,3 +1,6 @@
+module Comm = Ev3_comm
+module Protocol = Ev3_protocol
+
 let sleepf sec =
   ignore (Unix.select [] [] [] sec)
 
