@@ -18,9 +18,10 @@ remove: [
 depends: [
   "omake" {build}
   "ocamlfind" {build}
+  "ctypes"
 ]
 available: [ ocaml-version >= "4.02" ]
 depexts: [
-  [ [ "debian"  ] [ "libbluetooth-dev" ] ]
-  [ [ "ubuntu"  ] [ "libbluetooth-dev" ] ]
+  [ [ "debian"  ] [ "libbluetooth" ] ]
+  [ [ "ubuntu"  ] [ "libbluetooth" ] ]
 ]

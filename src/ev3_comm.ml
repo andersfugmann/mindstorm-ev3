@@ -33,10 +33,8 @@ let error = function
   | _ -> failwith "Unknown error"
 
 
-external connect : string -> Unix.file_descr = "ocaml_mindstorm_connect"
-
 let connect addr =
-  let fd = connect addr in
+  let fd = Ev3_bluetooth.connect addr in
   let ic = Unix.in_channel_of_descr fd in
   let oc = Unix.out_channel_of_descr fd in
   { ic; oc }
