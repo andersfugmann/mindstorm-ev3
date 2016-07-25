@@ -1,37 +1,8 @@
 (** Use ctypes if at all needed *)
 type t = { ic: in_channel; oc: out_channel }
 
-type error =
-  | Unknown_handle
-  | Handle_not_ready
-  | Corrupt_file
-  | No_handles_available
-  | No_permission
-  | Illegal_path
-  | File_exists
-  | End_of_file
-  | Size_error
-  | Unknown_error
-  | Illegal_filename
-  | Illegal_connection
-
-exception Error of error
-
-let error = function
-  | 0x01 -> Error Unknown_handle
-  | 0x02 -> Error Handle_not_ready
-  | 0x03 -> Error Corrupt_file
-  | 0x04 -> Error No_handles_available
-  | 0x05 -> Error No_permission
-  | 0x06 -> Error Illegal_path
-  | 0x07 -> Error File_exists
-  | 0x08 -> Error End_of_file
-  | 0x09 -> Error Size_error
-  | 0x0A -> Error Unknown_error
-  | 0x0B -> Error Illegal_filename
-  | 0x0C -> Error Illegal_connection
-  | _ -> failwith "Unknown error"
-
+exception CommandError
+exception IllegalResponse
 
 let connect addr =
   let fd = Ev3_bluetooth.connect addr in
@@ -39,37 +10,34 @@ let connect addr =
   let oc = Unix.out_channel_of_descr fd in
   { ic; oc }
 
-let system_reply = '\x01'
-let system_no_reply = '\x81'
-let direct_reply = '\x00'
-let direct_no_reply = '\x80'
-
 let print_buffer buf =
   for i = 0 to Buffer.length buf - 1 do
     Printf.printf "%.02x " (Buffer.nth buf i |> Char.code)
   done;
   print_newline ()
 
+let read_short buffer offset =
+  Char.code (Buffer.nth buffer offset) + (0xFF * Char.code (Buffer.nth buffer (offset + 1)))
+
 let recv t =
   let buf = Buffer.create 2 in
   Buffer.add_channel buf t.ic 2;
-  print_buffer buf;
-
-  let len =
-    Char.code (Buffer.nth buf 0) + (0xFF * Char.code (Buffer.nth buf 1))
-  in
-  (* Check the version code *)
+  let len = read_short buf 0 in
   let buf = Buffer.create len in
   Buffer.add_channel buf t.ic len;
-  print_buffer buf
-
-  (* Decode the reply *)
+  (* Byte 2 3 is the message counter, which should match the sent message
+    if (message_id = read_short buf 0) then raise IllegalResponse;
+  *)
+  match Buffer.nth buf 2 |> Char.code with
+  | 0x02 -> (* No error *) ()
+  | 0x04 -> (* Error *) raise CommandError
+  | _ -> raise IllegalResponse
 
 (* This function should set the header *)
-let send t ?(sync=false) msg =
+let send t ~sync msg =
   print_buffer msg;
   Buffer.output_buffer t.oc msg;
   flush t.oc;
   match sync with
   | false -> ()
-  | true -> recv t
+  | true -> recv t (* Need the message id *)
