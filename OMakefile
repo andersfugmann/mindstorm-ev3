@@ -1,18 +1,12 @@
 USE_OCAMLFIND = true
-
+OCAMLPACKS[] = ctypes.foreign
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
+OCAMLFLAGS = -g -w @A-4-29-41-44-45 -bin-annot -short-paths
 
-CC_CONFIG = $(shell $(OCAMLC) -config | grep bytecomp_c_compiler:)
-CC = $(nth 1, $(CC_CONFIG))
-CFLAGS = $(nth-tl 2, $(CC_CONFIG))
-CFLAGS += -I$(shell $(OCAMLC) -where)
-
-OCAMLFLAGS = -g -w @A-4-29-41-44-45 -bin-annot
 mkdir -p _build
 vmount(-l, src, _build)
 
-OCAMLPACKS[] = ctypes.foreign
 
 .SUBDIRS: _build
 
@@ -29,21 +23,17 @@ OCAMLPACKS[] = ctypes.foreign
         OCamlLibrary(mindstorm-ev3, $(FILES))
 
         .PHONY: install uninstall
-        .install.made: ../META mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma
+        install: ../META mindstorm-ev3.cmxa mindstorm-ev3.a mindstorm-ev3.cma
 
                 ocamlfind remove mindstorm-ev3 || true
-                ocamlfind install mindstorm-ev3 ../META $(addsuffix .c*, $(FILES)) *mindstorm-ev3*
+                ocamlfind install mindstorm-ev3 ../META $(addsuffix .c*, $(FILES)) $^
                 touch $@
 
-        install: .install.made
         uninstall:
 		ocamlfind remove mindstorm-ev3 || true
 
     section:
-	OCAMLPACKS[] = mindstorm-ev3
-
-	main.opt: install
-	main.byte: install
+	OCAML_LIBS = mindstorm-ev3
         OCamlProgram(main, main)
 
         .DEFAULT: main
