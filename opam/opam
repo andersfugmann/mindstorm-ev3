@@ -9,9 +9,7 @@ dev-repo: "https://github.com/andersfugmann/mindstorm-ev3.git"
 bug-reports: "https://github.com/andersfugmann/mindstorm-ev3/issues"
 build: ["omake"]
 install: ["omake" "install"]
-remove: [
-  ["omake" "uninstall"]
-]
+remove: ["omake" "uninstall"]
 
 #build-doc: [ "omake" "doc" ]
 
