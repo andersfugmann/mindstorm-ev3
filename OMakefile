@@ -37,3 +37,13 @@ vmount(-l, src, _build)
         OCamlProgram(main, main)
 
         .DEFAULT: main
+
+.PHONY: clean
+clean:
+	rm -f -r _build
+	rm -f *~
+	rm -f .#*
+	rm -f src/*~
+	rm -f src/.#*
+	rm -f *.omc
+	rm -f *.lock
