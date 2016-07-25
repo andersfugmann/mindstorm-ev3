@@ -50,12 +50,6 @@ let print_buffer buf =
   done;
   print_newline ()
 
-(* This function should set the header *)
-let send t msg =
-  print_buffer msg;
-  Buffer.output_buffer t.oc msg;
-  flush t.oc
-
 let recv t =
   let buf = Buffer.create 2 in
   Buffer.add_channel buf t.ic 2;
@@ -70,3 +64,12 @@ let recv t =
   print_buffer buf
 
   (* Decode the reply *)
+
+(* This function should set the header *)
+let send t ?(sync=false) msg =
+  print_buffer msg;
+  Buffer.output_buffer t.oc msg;
+  flush t.oc;
+  match sync with
+  | false -> ()
+  | true -> recv t

@@ -1,42 +1,21 @@
 module Comm = Ev3_comm
-module Protocol = Ev3_protocol
-
-let sleepf sec =
-  ignore (Unix.select [] [] [] sec)
+open Ev3_protocol
 
 let message_id = ref 0
 (* Helper to construct a send function *)
-let helper spec ~sync opcode =
-  let spec =
-    let open Protocol in
-    Raw16 :: Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: spec
-  in
-  let length = Protocol.length spec in
-  fun () ->
-    let b = Buffer.create length in
-    let encode = Protocol.encode spec b in
-
-
-    let id = !message_id in
-    incr message_id;
-    let reply = if sync then 0x00 else 0x80 in
-    encode (length - 2) id reply 0x0 0x0 opcode
+let send_command ?(sync=false) conn opcode spec =
+  let spec = Raw16 :: Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: spec in
+  let length = Ev3_protocol.length spec in
+  let b = Buffer.create length in
+  let id = !message_id in
+  incr message_id;
+  let reply = if sync then 0x00 else 0x80 in
+  encode spec b (Comm.send ~sync conn) (length - 2) id reply 0x0 0x0 opcode
 
 
 module Sound = struct
-  let tone =
-    let f =
-      let open Protocol in
-      helper ~sync:true (Data8 :: Data8 :: Data16 :: Data16 :: Nil) 0x94
-    in
-
-    fun conn ~vol ~freq ~ms ->
-      let msg = f () 0x01 vol freq ms in
-      (* Send it now *)
-      Comm.send conn msg;
-      Comm.recv conn;
-
-      sleepf (((float) ms) /. 1000.0)
+  let tone conn ~vol ~freq ~ms =
+    send_command conn ~sync:true 0x94 (Data8 :: Data8 :: Data16 :: Data16 :: Nil) 0x01 vol freq ms
 end
 
 module Output = struct
@@ -63,56 +42,19 @@ module Output = struct
       127 + (n * (-1))
     | n -> n
 
-  let set_type =
-    let f =
-      let open Protocol in
-      helper ~sync:true (Data8 :: Data8 :: Data8 :: Nil) 0xA1
-    in
-    fun conn ~layer ~ports ~motor_type ->
-      let msg = f () layer (port_bitmask ports) (int_of_motor_type motor_type) in
-      Comm.send conn msg;
-      Comm.recv conn
+  let set_type conn ?(layer=0) ~ports ~motor_type =
+    send_command conn ~sync:true 0xA1 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (int_of_motor_type motor_type)
 
+  let start conn ?(layer=0) ~ports =
+    send_command conn ~sync:true 0xA6 (Data8 :: Data8 :: Nil) layer (port_bitmask ports)
 
-  let start =
-    let f =
-      let open Protocol in
-      helper ~sync:true (Data8 :: Data8 :: Nil) 0xA6
-    in
-    fun conn ~layer ~ports ->
-      let msg = f () layer (port_bitmask ports) in
-      Comm.send conn msg;
-      Comm.recv conn
+  let stop conn ?(layer=0) ~ports ~force =
+    send_command conn ~sync:true 0xA3 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (if force then 0x01 else 0x0)
 
-  let stop =
-    let f =
-      let open Protocol in
-      helper ~sync:true (Data8 :: Data8 :: Data8 :: Nil) 0xA3
-    in
-    fun conn ~layer ~ports ~force ->
-      let break = if force then 1 else 0 in
-      let msg = f () layer (port_bitmask ports) break in
-      Comm.send conn msg;
-      Comm.recv conn
+  let set_speed conn ?(layer=0) ~ports ~speed =
+    send_command conn ~sync:true 0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (char_of_range speed)
 
-  let set_speed =
-    let f =
-      let open Protocol in
-      helper ~sync:true (Data8 :: Data8 :: Data8 :: Nil) 0xA4
-    in
-    fun conn ~layer ~ports ~speed ->
-      let msg = f () layer (port_bitmask ports) (char_of_range speed) in
-      Comm.send conn msg;
-      Comm.recv conn
-
-  let set_power =
-    let f =
-      let open Protocol in
-      helper ~sync:true (Data8 :: Data8 :: Data8 :: Nil) 0xA4
-    in
-    fun conn ~layer ~ports ~power ->
-      let msg = f () layer (port_bitmask ports) (char_of_range power) in
-      Comm.send conn msg;
-      Comm.recv conn
+  let set_power conn ?(layer=0) ~ports ~power =
+    send_command conn ~sync:true  0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (char_of_range power)
 
 end

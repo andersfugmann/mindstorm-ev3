@@ -1,12 +1,12 @@
 opam-version: "1.2"
-name: "mindstorm-EV3"
+name: "mindstorm-ev3"
 version: "0.0.1"
 maintainer: "Anders Fugmannr <anders@fugmann.net>"
 authors: [ "Anders Fugmann" ]
 license: "BSD3"
-homepage: "https://github.com/andersfugmann/mindstorm-EV3/"
-dev-repo: "https://github.com/andersfugmann/mindstorm-EV3.git"
-bug-reports: "https://github.com/andersfugmann/mindstorm-EV3/issues"
+homepage: "https://github.com/andersfugmann/mindstorm-ev3/"
+dev-repo: "https://github.com/andersfugmann/mindstorm-ev3.git"
+bug-reports: "https://github.com/andersfugmann/mindstorm-ev3/issues"
 build: ["omake"]
 install: ["omake" "install"]
 remove: [

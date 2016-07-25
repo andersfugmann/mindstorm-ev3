@@ -1,17 +1,24 @@
 open Ev3
 let addr = "00:16:53:46:E7:F0"
 
+let sleepf sec =
+  ignore (Unix.select [] [] [] sec)
+
 let () =
   let conn = Comm.connect addr in
   (* Comm.recv conn; *)
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
-  (*
+  sleepf 0.2;
   Commands.Sound.tone conn ~vol:2 ~freq:1200 ~ms:200;
+  sleepf 0.2;
   Commands.Sound.tone conn ~vol:2 ~freq:800 ~ms:200;
+  sleepf 0.2;
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
+  sleepf 0.2;
   Commands.Sound.tone conn ~vol:2 ~freq:1200 ~ms:200;
+  sleepf 0.2;
   Commands.Sound.tone conn ~vol:2 ~freq:1400 ~ms:200;
-  *)
+(*
   Commands.Output.set_type conn ~layer:0 ~ports:[Commands.Output.All] ~motor_type:Commands.Output.Medium;
 
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
@@ -41,5 +48,6 @@ let () =
 
   Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~force:false;
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
+*)
   print_endline "Done";
   ()

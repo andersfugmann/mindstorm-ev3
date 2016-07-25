@@ -6,10 +6,6 @@ type _ elem =
   | Data16 : int elem
   | Data32 : int elem
 
-type (_, _) spec =
-  | Nil : ('a, 'a) spec
-  | :: : 'a elem * ('b, 'c) spec -> (('a -> 'b), 'c) spec
-
 let rec write : type a. a elem -> Buffer.t -> a -> unit = function
   | Raw8 -> fun t v -> Buffer.add_char t (Char.chr v)
   | Raw16 -> fun t v ->
@@ -28,12 +24,15 @@ let rec write : type a. a elem -> Buffer.t -> a -> unit = function
     write Raw8 t 0x83;
     write Raw32 t
 
-let rec encode: type b. (b, Buffer.t) spec -> Buffer.t -> b = function
-  | x :: xs ->
-    let write = write x
-    and encode = encode xs in
-    fun t x -> write t x; encode t
-  | Nil -> fun a -> a
+
+type (_, _, _) spec =
+  | Nil : ('b, 'c, 'b) spec
+  | :: : 'a elem * ('b, 'c, 'd) spec -> (('a -> 'b), 'c, 'd) spec
+
+let rec encode: type b a. (b, Buffer.t, a) spec -> Buffer.t -> (Buffer.t -> a) -> b = function
+  | x :: xs -> fun buffer f v ->
+    write x buffer v; encode xs buffer f
+  | Nil -> fun buff f -> f buff
 
 let rec elem_size: type a. a elem -> int = function
   | Raw8   -> 1
@@ -43,6 +42,6 @@ let rec elem_size: type a. a elem -> int = function
   | Data16 -> elem_size Raw16 + 1
   | Data32 -> elem_size Raw32 + 1
 
-let rec length: type a b. (a, b) spec -> int = function
+let rec length: type a b c. (a, b, c) spec -> int = function
   | x :: xs -> elem_size x + length xs
   | Nil -> 0
