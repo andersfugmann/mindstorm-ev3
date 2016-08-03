@@ -22,31 +22,31 @@ let () =
   Commands.Output.set_type conn ~layer:0 ~ports:[Commands.Output.All] ~motor_type:Commands.Output.Medium;
 
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
-  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~force:false;
+  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~break:false;
   Commands.Output.set_speed conn ~layer:0 ~ports:[Commands.Output.PortA] ~speed:(-50);
   Commands.Output.start conn ~layer:0 ~ports:[Commands.Output.PortA]; (* Syncro *)
   sleepf 1.0;
 
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
-  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~force:false;
+  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~break:false;
   Commands.Output.set_speed conn ~layer:0 ~ports:[Commands.Output.All] ~speed:(-50);
   Commands.Output.start conn ~layer:0 ~ports:[Commands.Output.All]; (* Syncro *)
   sleepf 1.0;
 
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
-  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~force:false;
+  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~break:false;
   Commands.Output.set_speed conn ~layer:0 ~ports:[Commands.Output.PortB] ~speed:(-50);
   Commands.Output.start conn ~layer:0 ~ports:[Commands.Output.PortB]; (* Syncro *)
   sleepf 1.0;
 
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:200;
-  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~force:false;
+  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~break:false;
   Commands.Output.set_speed conn ~layer:0 ~ports:[Commands.Output.All] ~speed:(-50);
   Commands.Output.start conn ~layer:0 ~ports:[Commands.Output.All]; (* Syncro *)
   sleepf 1.0;
 
 
-  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~force:false;
+  Commands.Output.stop conn ~layer:0 ~ports:[Commands.Output.All] ~break:false;
   Commands.Sound.tone conn ~vol:2 ~freq:1000 ~ms:1000;
   print_endline "Done";
   ()

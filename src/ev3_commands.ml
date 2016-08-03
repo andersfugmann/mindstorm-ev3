@@ -37,24 +37,25 @@ module Output = struct
     |> List.map int_of_port
     |> List.fold_left (lor) 0
 
-  let char_of_range = function
-    | n when n < 0 ->
-      127 + (n * (-1))
-    | n -> n
-
   let set_type conn ?(layer=0) ~ports ~motor_type =
     send_command conn ~sync:true 0xA1 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (int_of_motor_type motor_type)
 
   let start conn ?(layer=0) ~ports =
     send_command conn ~sync:true 0xA6 (Data8 :: Data8 :: Nil) layer (port_bitmask ports)
 
-  let stop conn ?(layer=0) ~ports ~force =
-    send_command conn ~sync:true 0xA3 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (if force then 0x01 else 0x0)
+  let stop conn ?(layer=0) ~ports ~break =
+    send_command conn ~sync:true 0xA3 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (if break then 0x01 else 0x0)
 
   let set_speed conn ?(layer=0) ~ports ~speed =
-    send_command conn ~sync:true 0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (char_of_range speed)
+    send_command conn ~sync:true 0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) speed
 
   let set_power conn ?(layer=0) ~ports ~power =
-    send_command conn ~sync:true  0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (char_of_range power)
+    send_command conn ~sync:true  0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) power
+
+  let time_power conn ?(layer=0) ~ports ~power ~rampup_ms ~run_ms ~rampdown_ms ~break =
+    send_command conn ~sync:true 0xAD (Data8 :: Data8 :: Data8 :: Data32 :: Data32 :: Data32 :: Data8 :: Nil) layer (port_bitmask ports) power rampup_ms run_ms rampdown_ms (if break then 0x01 else 0x0)
+
+  let time_speed conn ?(layer=0) ~ports ~speed ~rampup_ms ~run_ms ~rampdown_ms ~break =
+    send_command conn ~sync:true 0xAF (Data8 :: Data8 :: Data8 :: Data32 :: Data32 :: Data32 :: Data8 :: Nil) layer (port_bitmask ports) speed rampup_ms run_ms rampdown_ms (if break then 0x01 else 0x0)
 
 end
