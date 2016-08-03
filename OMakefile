@@ -17,6 +17,7 @@ vmount(-l, src, _build)
             ev3_comm
             ev3_protocol
             ev3_commands
+            ev3_highlevel
             ev3
 
 

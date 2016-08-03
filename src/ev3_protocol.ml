@@ -7,7 +7,11 @@ type _ elem =
   | Data32 : int elem
 
 let rec write : type a. a elem -> Buffer.t -> a -> unit = function
-  | Raw8 -> fun t v -> Buffer.add_char t (Char.chr v)
+  | Raw8 -> begin fun t -> function
+      | v when v < 0 ->
+        let v = 255 + v in Buffer.add_char t (Char.chr (v land 0xFF))
+      | v -> Buffer.add_char t (Char.chr v)
+    end
   | Raw16 -> fun t v ->
     write Raw8 t (v land 0xFF);
     write Raw8 t (v lsr 8 land 0xFF)
