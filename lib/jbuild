@@ -1,0 +1,8 @@
+(jbuild_version 1)
+
+(library
+ ((name        mindstorm_ev3)
+  (public_name mindstorm_ev3)
+  (libraries (ctypes.foreign str))
+  (wrapped false)
+  ))

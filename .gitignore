@@ -1,22 +1,9 @@
-*.annot
-*.cmo
-*.cma
-*.cmi
-*.a
-*.o
-*.cmx
-*.cmxs
-*.cmxa
-
-# ocamlbuild working directory
-_build/
-
-# ocamlbuild targets
-*.byte
-*.native
-
 *~
 .*#
-.omakedb
-.omakedb.lock
-*.omc
+\#*#
+
+# jbuilder generated files
+_build/
+.merlin
+
+mindstorm_ev3.install

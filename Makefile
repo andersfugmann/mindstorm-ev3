@@ -1,5 +1,14 @@
-default:
-	omake -w
+.DEFAULT: remote
+.PHONY: build install remote clean
 
-%:
-	omake -w $@
+build:
+	jbuilder build
+
+install: build
+	jbuilder install
+
+remote:
+	jbuilder build src/remote.exe
+
+clean:
+	jbuilder clean
