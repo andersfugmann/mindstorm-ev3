@@ -17,8 +17,9 @@ depends: [
   "omake" {build}
   "ocamlfind" {build}
   "ctypes"
+  "ctypes-foreign"
 ]
-available: [ ocaml-version >= "4.02" ]
+available: [ ocaml-version >= "4.05" ]
 depexts: [
   [ [ "debian"  ] [ "libbluetooth" ] ]
   [ [ "ubuntu"  ] [ "libbluetooth" ] ]
