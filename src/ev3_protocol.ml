@@ -31,7 +31,7 @@ let rec write : type a. a elem -> Buffer.t -> a -> unit = function
 
 type (_, _, _) spec =
   | Nil : ('b, 'c, 'b) spec
-  | :: : 'a elem * ('b, 'c, 'd) spec -> (('a -> 'b), 'c, 'd) spec
+  | (::) : 'a elem * ('b, 'c, 'd) spec -> (('a -> 'b), 'c, 'd) spec
 
 let rec encode: type b a. (b, Buffer.t, a) spec -> Buffer.t -> (Buffer.t -> a) -> b = function
   | x :: xs -> fun buffer f v ->

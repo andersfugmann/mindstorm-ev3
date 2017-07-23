@@ -26,7 +26,7 @@ let sock_stream = 1
 (** Convert a string to a bluetooth address *)
 let str2ba addr =
   let re = Str.regexp ":" in
-  String.lowercase addr
+  String.lowercase_ascii addr
   |> Str.split re
   |> List.map (fun s -> Scanf.sscanf s "%x" (fun h -> h))
   |> List.map UInt8.of_int

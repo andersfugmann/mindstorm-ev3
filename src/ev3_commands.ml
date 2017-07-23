@@ -15,7 +15,9 @@ let send_command ?(sync=false) conn opcode spec =
 
 module Sound = struct
   let tone conn ~vol ~freq ~ms =
-    send_command conn ~sync:true 0x94 (Data8 :: Data8 :: Data16 :: Data16 :: Nil) 0x01 vol freq ms
+    send_command conn ~sync:true 0x94
+      (Data8 :: Data8 :: Data16 :: Data16 :: Nil)
+      0x01 vol freq ms
 end
 
 module Output = struct
@@ -38,24 +40,58 @@ module Output = struct
     |> List.fold_left (lor) 0
 
   let set_type conn ?(layer=0) ~ports ~motor_type =
-    send_command conn ~sync:true 0xA1 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (int_of_motor_type motor_type)
+    send_command conn ~sync:true 0xA1
+      (Data8 :: Data8 :: Data8 :: Nil)
+      layer (port_bitmask ports) (int_of_motor_type motor_type)
 
   let start conn ?(layer=0) ~ports =
-    send_command conn ~sync:true 0xA6 (Data8 :: Data8 :: Nil) layer (port_bitmask ports)
+    send_command conn ~sync:true 0xA6
+      (Data8 :: Data8 :: Nil)
+      layer (port_bitmask ports)
 
   let stop conn ?(layer=0) ~ports ~break =
-    send_command conn ~sync:true 0xA3 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) (if break then 0x01 else 0x0)
+    send_command conn ~sync:true 0xA3
+      (Data8 :: Data8 :: Data8 :: Nil)
+      layer (port_bitmask ports) (if break then 0x01 else 0x0)
 
   let set_speed conn ?(layer=0) ~ports ~speed =
-    send_command conn ~sync:true 0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) speed
+    send_command conn ~sync:true 0xA4
+      (Data8 :: Data8 :: Data8 :: Nil)
+      layer (port_bitmask ports) speed
 
   let set_power conn ?(layer=0) ~ports ~power =
-    send_command conn ~sync:true  0xA4 (Data8 :: Data8 :: Data8 :: Nil) layer (port_bitmask ports) power
+    send_command conn ~sync:true  0xA4
+      (Data8 :: Data8 :: Data8 :: Nil)
+      layer (port_bitmask ports) power
 
   let time_power conn ?(layer=0) ~ports ~power ~rampup_ms ~run_ms ~rampdown_ms ~break =
-    send_command conn ~sync:true 0xAD (Data8 :: Data8 :: Data8 :: Data32 :: Data32 :: Data32 :: Data8 :: Nil) layer (port_bitmask ports) power rampup_ms run_ms rampdown_ms (if break then 0x01 else 0x0)
+    send_command conn ~sync:true 0xAD
+      (Data8 :: Data8 :: Data8 :: Data32 :: Data32 :: Data32 :: Data8 :: Nil)
+      layer (port_bitmask ports) power rampup_ms run_ms rampdown_ms (if break then 0x01 else 0x0)
 
   let time_speed conn ?(layer=0) ~ports ~speed ~rampup_ms ~run_ms ~rampdown_ms ~break =
-    send_command conn ~sync:true 0xAF (Data8 :: Data8 :: Data8 :: Data32 :: Data32 :: Data32 :: Data8 :: Nil) layer (port_bitmask ports) speed rampup_ms run_ms rampdown_ms (if break then 0x01 else 0x0)
+    send_command conn ~sync:true 0xAF
+      (Data8 :: Data8 :: Data8 :: Data32 :: Data32 :: Data32 :: Data8 :: Nil)
+      layer (port_bitmask ports) speed rampup_ms run_ms rampdown_ms (if break then 0x01 else 0x0)
+
+  type polarity = Forward | Backward | Opposite
+  let polarity conn ?(layer=0) ~ports ~polarity =
+    let polarity = match polarity with
+      | Forward -> 0x01
+      | Backward -> 0xFF
+      | Opposite -> 0x0
+    in
+    send_command conn ~sync:true 0xA7 (Data8 :: Data8 :: Data8 :: Nil)
+      layer (port_bitmask ports) polarity
+
+  let time_sync conn ?(layer=0) ~speed ~turn ~time ~break =
+    ignore conn;
+    ignore layer;
+    ignore speed;
+    ignore turn;
+    ignore time;
+    ignore break;
+    ()
+
 
 end

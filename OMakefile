@@ -1,5 +1,5 @@
 USE_OCAMLFIND = true
-OCAMLPACKS[] = ctypes.foreign
+OCAMLPACKS[] = ctypes.foreign str
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 OCAMLFLAGS = -g -w @A-4-29-41-44-45 -bin-annot -short-paths
