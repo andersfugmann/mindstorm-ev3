@@ -5,5 +5,4 @@
 # jbuilder generated files
 _build/
 .merlin
-
-mindstorm_ev3.install
+mindstorm-ev3.install

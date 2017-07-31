@@ -2,7 +2,7 @@
 
 (library
  ((name        mindstorm_ev3)
-  (public_name mindstorm_ev3)
+  (public_name mindstorm-ev3)
   (libraries (ctypes.foreign str))
   (wrapped false)
   ))
