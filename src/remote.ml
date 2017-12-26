@@ -11,13 +11,13 @@ type command = Forward | Reverse | Left | Right | Spin | Beep | Unknown of int
 
 let read_command () =
   match input_byte stdin with
-  | 97 -> Left
+  | 97  -> Left
   | 100 -> Right
   | 119 -> Forward
   | 120 -> Reverse
-  | 32 -> Spin
-  | 98 -> Beep
-  | n -> Unknown n
+  | 32  -> Spin
+  | 98  -> Beep
+  | n   -> Unknown n
 
 let process_command conn = function
   | Left -> Highlevel.turn conn ~turn:Highlevel.Left ~ms:250

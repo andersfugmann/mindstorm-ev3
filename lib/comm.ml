@@ -10,10 +10,10 @@ let connect addr =
   { ic; oc }
 
 (* Use hex module *)
-let print_buffer str =
+let print_buffer prefix str =
   Hex.of_string str
   |> Hex.show
-  |> Printf.printf "%s\n"
+  |> Printf.printf "%s: %s\n%!" prefix
 
 (** Use endian *)
 let read_short buffer offset =
@@ -22,10 +22,14 @@ let read_short buffer offset =
 (* Receive data *)
 
 let recv t =
+  let buffer = Bytes.create 2 in
+  let (_ : unit option) =
+    In_channel.really_input t.ic ~buf:(Caml.Bytes.unsafe_to_string buffer) ~pos:0 ~len:2
+  in
+  print_buffer "input" (Caml.Bytes.to_string buffer);
   (* Read bytes at a time. *)
-  let buf = Buffer.create 2 in
-  Buffer.add_channel buf t.ic 2;
-  let len = read_short buf 0 in
+  let len = EndianBytes.LittleEndian.get_int16 buffer 0 in
+  Printf.printf "Read len: %d\n%!" len;
   let buf = Buffer.create len in
   Buffer.add_channel buf t.ic len;
   (* Byte 2 3 is the message counter, which should match the sent message
@@ -38,7 +42,7 @@ let recv t =
 
 (* This function should set the header *)
 let send t (msg : String.t) =
-  print_buffer msg;
+  print_buffer "output" msg;
   Out_channel.output_string t.oc msg;
   Out_channel.flush t.oc;
   recv t
