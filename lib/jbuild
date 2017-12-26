@@ -3,6 +3,6 @@
 (library
  ((name        mindstorm_ev3)
   (public_name mindstorm-ev3)
-  (libraries (ctypes.foreign str))
+  (libraries (ctypes.foreign str core hex ocplib-endian))
   (wrapped false)
   ))

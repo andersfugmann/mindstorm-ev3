@@ -15,6 +15,10 @@ depends: [
   "jbuilder" {build}
   "ctypes"
   "ctypes-foreign"
+  "hex"
+  "core"
+  "base"
+  "ocplib-endian"
 ]
 available: [ ocaml-version >= "4.05" ]
 depexts: [

@@ -1,6 +1,5 @@
-(** Use ctypes if at all needed *)
-type t = { ic: in_channel; oc: out_channel }
-
+open Core
+type t = { ic: In_channel.t; oc: Out_channel.t }
 exception CommandError
 exception IllegalResponse
 
@@ -10,16 +9,20 @@ let connect addr =
   let oc = Unix.out_channel_of_descr fd in
   { ic; oc }
 
-let print_buffer buf =
-  for i = 0 to Buffer.length buf - 1 do
-    Printf.printf "%.02x " (Buffer.nth buf i |> Char.code)
-  done;
-  print_newline ()
+(* Use hex module *)
+let print_buffer str =
+  Hex.of_string str
+  |> Hex.show
+  |> Printf.printf "%s\n"
 
+(** Use endian *)
 let read_short buffer offset =
-  Char.code (Buffer.nth buffer offset) + (0xFF * Char.code (Buffer.nth buffer (offset + 1)))
+  Char.to_int (Buffer.nth buffer offset) + (0xFF * Char.to_int (Buffer.nth buffer (offset + 1)))
+
+(* Receive data *)
 
 let recv t =
+  (* Read bytes at a time. *)
   let buf = Buffer.create 2 in
   Buffer.add_channel buf t.ic 2;
   let len = read_short buf 0 in
@@ -28,16 +31,14 @@ let recv t =
   (* Byte 2 3 is the message counter, which should match the sent message
     if (message_id = read_short buf 0) then raise IllegalResponse;
   *)
-  match Buffer.nth buf 2 |> Char.code with
+  match Buffer.nth buf 2 |> Char.to_int with
   | 0x02 -> (* No error *) ()
   | 0x04 -> (* Error *) raise CommandError
   | _ -> raise IllegalResponse
 
 (* This function should set the header *)
-let send t ~sync msg =
+let send t (msg : String.t) =
   print_buffer msg;
-  Buffer.output_buffer t.oc msg;
-  flush t.oc;
-  match sync with
-  | false -> ()
-  | true -> recv t (* Need the message id *)
+  Out_channel.output_string t.oc msg;
+  Out_channel.flush t.oc;
+  recv t
