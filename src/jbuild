@@ -2,4 +2,5 @@
 
 (executable
  ((name remote)
-  (libraries (mindstorm_ev3))))
+  (public_name remote)
+  (libraries (ev3))))

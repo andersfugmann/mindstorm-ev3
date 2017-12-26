@@ -1,12 +1,11 @@
-module Comm = Ev3_comm
-open Ev3_protocol
+open Protocol
 
 let message_id = ref 0
 
 (* Helper to construct a send function *)
 let send_command conn opcode data =
   let spec = Raw16 :: Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: Nil in
-  let length = Ev3_protocol.length spec + (Bytes.length data) - 2 in
+  let length = Protocol.length spec + (Bytes.length data) - 2 in
   let id = !message_id in
   incr message_id;
   let header = encode spec length id 0x00 0x0 0x0 opcode in

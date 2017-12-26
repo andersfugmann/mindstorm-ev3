@@ -5,7 +5,7 @@
 
 *)
 
-open Ev3_commands
+open Commands
 
 (** Move motor A and B synchoniously forward *)
 type direction = Forward | Reverse
