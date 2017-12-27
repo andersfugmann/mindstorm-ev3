@@ -12,7 +12,7 @@ lets the user control motors by using
 
      w
      |
- a -  - d
+ a -   - d
      |
      x
 
