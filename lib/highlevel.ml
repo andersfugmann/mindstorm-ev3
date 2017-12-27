@@ -17,7 +17,7 @@ let move conn ~direction ~ms =
   (* should synchronize the motors *)
   Output.time_speed conn ~layer:0 ~ports:[Output.PortB; Output.PortC] ~speed ~rampup_ms:10 ~rampdown_ms:10 ~run_ms:ms ~break:false
 
-(** Esentially just move one of the motors *)
+(** Essentially just move one of the motors *)
 type turn = Left | Right
 let turn conn ~turn ~ms =
   let port = match turn with

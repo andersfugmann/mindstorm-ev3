@@ -26,7 +26,7 @@ let do_command conn ~opcode ~request_spec ~reply_spec ~reply_func =
 
   let f message =
     Comm.send conn (Bytes.to_string message);
-    let reply = Comm.recv conn in
+    let reply = Comm.recv conn |> Bytes.to_string in
     decode reply_spec reply reply_func
   in
   encode f request_spec message_length message_id 0x00 0x0 0x0 opcode

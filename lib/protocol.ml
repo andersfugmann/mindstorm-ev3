@@ -7,6 +7,7 @@ type _ elem =
   | Data32 : int elem
   | Float : float elem
   | Array : 'a elem * int -> 'a array elem
+  | String : string elem
 
 let rec elem_size: type a. a elem -> int = function
   | Raw8   -> 1
@@ -18,6 +19,7 @@ let rec elem_size: type a. a elem -> int = function
   | Float -> elem_size Raw32 + 1
   | Array (arr_type, len) ->
     elem_size arr_type * len
+  | String -> failwith "Length of strings are undefined"
 
 type (_, _) spec =
   | Nil : ('a, 'a) spec
@@ -53,6 +55,7 @@ let rec write : type a. a elem -> Bytes.t -> int -> a -> unit = function
   | Array (arr_type, _len) -> fun buffer offset arr ->
     let elem_size = elem_size arr_type in
     Array.iteri (fun i v -> write arr_type buffer (offset + i * elem_size) v) arr
+  | String -> failwith "Cannot send strings"
 
 let rec read : type a. a elem -> string -> int -> a = function
   | Raw8 -> fun buffer offset ->
@@ -77,6 +80,9 @@ let rec read : type a. a elem -> string -> int -> a = function
   | Array (arr_type, len) -> fun buffer offset ->
     let elem_size = elem_size arr_type in
     Array.init len (fun i -> read arr_type buffer (offset + elem_size * i))
+  | String -> fun _buf _offset ->
+    (* Strings are zero terminated IIRC *)
+    "hello"
 
 let encode func spec =
   let rec encode: type a b. (a, b) spec -> (Bytes.t -> b) -> Bytes.t -> int -> a = function
