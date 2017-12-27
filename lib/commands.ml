@@ -154,7 +154,7 @@ module Input = struct
     let readext = 0x9E
     let write = 0x9F
   end
-  module Types = struct
+  module Device = struct
     type t =
       | Unknown
       | Daisychain
@@ -197,6 +197,7 @@ module Input = struct
       | 0x7E -> None
       | _ -> Error
   end
+
   let read_si conn ?(layer=0) ?(input_type=0) ?(mode=0) port =
     let opcode = 0x9D in
     let request_spec = Data8 :: Data8 :: Data8 :: Data8 :: Nil in
@@ -218,6 +219,32 @@ module Input = struct
     in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
       32
+
+  (* Device mode: 0x05 *)
+  (* Connection: 0x0c *)
+  let get_name conn ?(layer=0) ~port =
+    let opcode = Opcodes.device in
+    let request_spec = Data8 :: Data8 :: Data8 :: Data8 :: Nil in
+    let reply_spec = Nil in
+    let reply_func = () in
+    do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
+      0x15 layer port 128
+
+  let get_connection conn ?(layer=0) ~port =
+    let opcode = Opcodes.device in
+    let request_spec = Data8 :: Data8 :: Data8 :: Nil in
+    let reply_spec = Data8 :: Nil in
+    let reply_func device = Device.of_int device in
+    do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
+      0x0c layer port
+
+  let get_typemode conn ?(layer=0) ~port =
+    let opcode = Opcodes.device in
+    let request_spec = Data8 :: Data8 :: Data8 :: Nil in
+    let reply_spec = Data8 :: Data8 :: Nil in
+    let reply_func device mode = (device, mode) in
+    do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
+      0x05 layer port
 
 
 end
