@@ -78,16 +78,17 @@ let rec read : type a. a elem -> string -> int -> a = function
     let elem_size = elem_size arr_type in
     Array.init len (fun i -> read arr_type buffer (offset + elem_size * i))
 
-let encode spec =
-  let rec encode: type a. (a, Bytes.t) spec -> Bytes.t -> int -> a = function
-  | x :: xs -> fun buffer offset v ->
+let encode func spec =
+  let rec encode: type a b. (a, b) spec -> (Bytes.t -> b) -> Bytes.t -> int -> a = function
+  | x :: xs -> fun func buffer offset v ->
     write x buffer offset v;
-    encode xs buffer (offset + elem_size x)
-  | Nil -> fun buffer _ -> buffer
+    encode xs func buffer (offset + elem_size x)
+  | Nil -> fun func buffer _ -> func buffer
   in
   let length = length spec in
   let buffer = Bytes.create length in
-  encode spec buffer 0
+  encode spec func buffer 0
+
 
 let decode spec data func =
   let rec decode: type a b. (a, b) spec -> string -> int -> (a -> b) = function

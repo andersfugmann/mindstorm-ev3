@@ -1,14 +1,16 @@
-.DEFAULT: remote
-.PHONY: build install remote clean
+.PHONY: build install clean remote input
 
 build:
-	jbuilder build
+	jbuilder build --dev
 
 install: build
 	jbuilder install
 
-remote:
-	jbuilder build src/remote.exe
-
 clean:
 	jbuilder clean
+
+remote:
+	jbuilder exec $@
+
+input:
+	jbuilder exec $@

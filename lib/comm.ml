@@ -15,17 +15,16 @@ let print_buffer prefix str =
 
 (* Receive data *)
 let recv t =
-  let buffer = String.make 2 ' 'in
+  let buffer = String.make 2 ' ' in
   let (_ : unit option) = In_channel.really_input t.ic ~buf:buffer ~pos:0 ~len:2 in
   let len = EndianString.LittleEndian.get_int16 buffer 0 in
   let buf = String.make len ' ' in
   let (_ : unit option) = In_channel.really_input t.ic ~buf ~pos:0 ~len in
-  print_buffer "input" buf;
+  print_buffer "recv" buf;
   buf
 
 (* Send data *)
 let send t (msg : String.t) =
-  print_buffer "output" msg;
+  print_buffer "send" msg;
   Out_channel.output_string t.oc msg;
-  Out_channel.flush t.oc;
-  recv t
+  Out_channel.flush t.oc
