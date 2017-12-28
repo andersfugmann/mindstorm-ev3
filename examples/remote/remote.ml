@@ -20,11 +20,11 @@ let read_command () =
   | n   -> Unknown n
 
 let process_command conn = function
-  | Left -> Highlevel.turn conn ~turn:Highlevel.Left ~ms:250
-  | Right -> Highlevel.turn conn ~turn:Highlevel.Right ~ms:250
-  | Forward -> Highlevel.move conn ~direction:Highlevel.Forward ~ms:250
-  | Reverse -> Highlevel.move conn ~direction:Highlevel.Reverse ~ms:250
-  | Spin -> Highlevel.aux conn ~rotate:Highlevel.Left ~ms:250
+  | Left -> Highlevel.turn conn ~wait:false ~turn:Highlevel.Left ~ms:250
+  | Right -> Highlevel.turn conn ~wait:false ~turn:Highlevel.Right ~ms:250
+  | Forward -> Highlevel.move conn ~wait:false ~direction:Highlevel.Forward ~ms:250
+  | Reverse -> Highlevel.move conn ~wait:false ~direction:Highlevel.Reverse ~ms:250
+  | Spin -> Highlevel.aux conn ~wait:false ~rotate:Highlevel.Left ~ms:250
   | Beep -> Commands.Sound.tone conn ~vol:100 ~freq:440 ~ms:250
   | Unknown n -> Printf.printf "Unknown command: %d\n%!" n
 

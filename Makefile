@@ -9,8 +9,8 @@ install: build
 clean:
 	jbuilder clean
 
-remote:
+remote: build
 	jbuilder exec $@
 
-input:
+input: build
 	jbuilder exec $@

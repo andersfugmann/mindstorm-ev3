@@ -15,6 +15,7 @@ let do_command conn ~opcode ~request_spec ~reply_spec ~reply_func =
   let request_spec = Raw16 :: Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: request_spec in
   let reply_spec = Raw16 :: Raw8 :: reply_spec in
   let message_length = (Protocol.length request_spec) - 2 in
+  let reply_length = Protocol.length reply_spec - 1 in
 
   let reply_func msg_id status =
     assert (msg_id = message_id);
@@ -29,7 +30,7 @@ let do_command conn ~opcode ~request_spec ~reply_spec ~reply_func =
     let reply = Comm.recv conn |> Bytes.to_string in
     decode reply_spec reply reply_func
   in
-  encode f request_spec message_length message_id 0x00 0x0 0x0 opcode
+  encode f request_spec message_length message_id 0x00 reply_length 0x0 opcode
 
 module Sound = struct
   let tone conn ~vol ~freq ~ms : unit =
@@ -209,26 +210,26 @@ module Input = struct
 
   let get_device_list conn =
     let opcode = Opcodes.device_list in
-    let request_spec = Data8 :: Nil in
-    let reply_spec = Array (Data8, 32) :: Data8 :: Nil in
+    let request_spec = Raw8 :: Raw8 :: Raw8 :: Nil in
+    let reply_spec = Array (Raw8, 4) :: Raw8 :: Nil in
     let reply_func arr changed =
       Array.to_list arr
-      |> List.mapi (Printf.sprintf "%d: %X")
+      |> List.mapi (Printf.sprintf "%d: 0x%X")
       |> String.concat "\n"
-      |> Printf.sprintf "Changed: %X\n%s\n" changed
+      |> Printf.sprintf "Changed: 0x%X\n%s\n" changed
     in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
-      32
+      0x04 0x60 0x64
 
   (* Device mode: 0x05 *)
   (* Connection: 0x0c *)
   let get_name conn ?(layer=0) ~port =
     let opcode = Opcodes.device in
-    let request_spec = Data8 :: Data8 :: Data8 :: Data8 :: Nil in
-    let reply_spec = Nil in
-    let reply_func = () in
+    let request_spec = Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: Nil in
+    let reply_spec = String :: Nil in
+    let reply_func s = s in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
-      0x15 layer port 128
+      0x00 0x15 layer port 128
 
   let get_connection conn ?(layer=0) ~port =
     let opcode = Opcodes.device in
