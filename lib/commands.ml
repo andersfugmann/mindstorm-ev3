@@ -222,11 +222,11 @@ module Input = struct
       | _ -> Error
   end
 
-  let read_si conn ?(layer=0) ?(input_type=0) ?(mode=0) port =
+  let read_si ?(layer=0) ?(input_type=0) ?(mode=0) conn ~port =
     let opcode = 0x9D in
     let request_spec = Data8 :: Data8 :: Data8 :: Data8 :: Nil in
-    let reply_spec = Nil in
-    let reply_func = () in
+    let reply_spec = Float :: Nil in
+    let reply_func f = f in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
       layer port input_type mode
 
@@ -246,15 +246,15 @@ module Input = struct
 
   (* Device mode: 0x05 *)
   (* Connection: 0x0c *)
-  let get_name conn ?(layer=0) ~port =
+  let get_name ?(layer=0) conn ~port =
     let opcode = Opcodes.device in
-    let request_spec = Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: Nil in
-    let reply_spec = String 4 :: Nil in
+    let request_spec = Raw8 :: Raw8 :: Raw8 :: Raw8 :: Nil in
+    let reply_spec = String 15 :: Nil in
     let reply_func s = s in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
-      0x00 0x15 layer port 128
+      layer port 0x15 16
 
-  let get_connection conn ?(layer=0) ~port =
+  let get_connection?(layer=0) conn ~port =
     let opcode = Opcodes.device in
     let request_spec = Data8 :: Data8 :: Data8 :: Nil in
     let reply_spec = Data8 :: Nil in

@@ -19,7 +19,7 @@ let rec elem_size: type a. a elem -> int = function
   | Data8  -> elem_size Raw8 + 1
   | Data16 -> elem_size Raw16 + 1
   | Data32 -> elem_size Raw32 + 1
-  | Float -> elem_size Raw32 + 1
+  | Float -> elem_size Raw32
   | Array (arr_type, len) ->
     elem_size arr_type * len
   | String n -> n + 1 (* Zero terminated *)
@@ -59,8 +59,7 @@ let rec write : type a. a elem -> Bytes.t -> int -> a -> unit = function
     write Raw8 buffer offset 0x83;
     write Raw32 buffer (offset + 1) v
   | Float -> fun buffer offset v ->
-    write Raw8 buffer offset 0x84; (* Validate this *)
-    EndianBytes.LittleEndian.set_float buffer (offset + 1) v
+    EndianBytes.LittleEndian.set_float buffer offset v
   | Array (arr_type, _len) -> fun buffer offset arr ->
     let elem_size = elem_size arr_type in
     Array.iteri ~f:(fun i v -> write arr_type buffer (offset + i * elem_size) v) arr
@@ -86,8 +85,8 @@ let rec read : type a. a elem -> string -> int -> a = function
     assert ((read Raw8 buffer offset) = 0x83);
     read Raw32 buffer (offset + 1)
   | Float -> fun buffer offset ->
-    assert ((read Raw8 buffer offset) = 0x84); (* Validate *)
-    EndianString.LittleEndian.get_float buffer (offset + 1)
+    (* assert ((read Raw8 buffer offset) = 0x84); (* Validate *) *)
+    EndianString.LittleEndian.get_float buffer (offset)
   | Array (arr_type, len) -> fun buffer offset ->
     let elem_size = elem_size arr_type in
     Array.init len ~f:(fun i -> read arr_type buffer (offset + elem_size * i))

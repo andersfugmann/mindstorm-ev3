@@ -14,15 +14,19 @@ let rec scan conn = function
     end;
     scan conn (succ port)
 
+let rec forever f =
+  f ();
+  forever f
+
 let () =
+
   let conn = Comm.connect addr in
   print_endline "Connected";
-
-  (*   scan conn 1 *)
-  let rec read () =
-    let str = Commands.Input.get_device_list conn in
-    Printf.printf "Data\n%s\n" str;
-    Thread.delay 1.0;
-    read ()
+  (* Read form color sensor *)
+  let read () =
+    let f = Commands.Input.read_si ~input_type:29 ~mode:4 conn ~port:3 in
+    Printf.printf "Val:%f\n%!" f;
+    Thread.delay 1.0
   in
-  read ()
+
+  forever read

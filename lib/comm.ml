@@ -11,7 +11,7 @@ let connect addr =
 let print_buffer prefix str =
   Hex.of_string str
   |> Hex.show
-  |> Printf.printf "%s: %s\n%!" prefix
+  |> Printf.eprintf "%s: %s\n%!" prefix
 
 (* Receive data *)
 let recv t =
