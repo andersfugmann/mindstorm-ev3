@@ -28,10 +28,6 @@ let next_message_id =
 
 let do_command conn ~opcode ~request_spec ~reply_spec ~reply_func =
   let message_id = next_message_id () in
-  let request_spec = Raw16 :: Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: request_spec in
-  let reply_spec = Raw16 :: Raw8 :: reply_spec in
-  let message_length = (Protocol.length request_spec) - 2 in
-  let reply_length = Protocol.length reply_spec - 1 in
 
   let reply_func msg_id status =
     assert (msg_id = message_id);
@@ -41,12 +37,23 @@ let do_command conn ~opcode ~request_spec ~reply_spec ~reply_func =
     | _ -> raise IllegalResponse
   in
 
-  let f message =
-    Comm.send conn (Bytes.to_string message);
-    let reply = Comm.recv conn |> Bytes.to_string in
-    decode reply_spec reply reply_func
+  let make_frame message =
+    (* Message should be the payload only. *)
+    let return_arg_offsets = return_arg_offsets reply_spec |> Array.of_list in
+    let reply_spec = Raw16 :: Raw8 :: reply_spec in
+    let reply_length = Protocol.length reply_spec - 3 in
+    let spec = Raw16 :: Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 ::
+               Raw (Bytes.length message) :: Array (Raw8, Array.length return_arg_offsets) :: Nil in
+    let message_length = (Protocol.length spec) - 2 in
+
+    let send_recv message =
+      Comm.send conn (Bytes.to_string message);
+      let reply = Comm.recv conn |> Bytes.to_string in
+      decode reply_spec reply reply_func
+    in
+    encode send_recv spec message_length message_id 0x00 reply_length 0x0 opcode message return_arg_offsets
   in
-  encode f request_spec message_length message_id 0x00 reply_length 0x0 opcode
+  encode make_frame request_spec
 
 module Sound = struct
   let tone conn ~vol ~freq ~ms : unit =
@@ -226,7 +233,7 @@ module Input = struct
 
   let get_device_list conn =
     let opcode = Opcodes.device_list in
-    let request_spec = Raw8 :: Raw8 :: Raw8 :: Nil in
+    let request_spec = Raw8 :: Nil in
     let reply_spec = Array (Raw8, 4) :: Raw8 :: Nil in
     let reply_func arr changed =
       Array.to_list arr
@@ -235,7 +242,7 @@ module Input = struct
       |> Printf.sprintf "Changed: 0x%X\n%s\n" changed
     in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
-      0x04 0x60 0x64
+      0x04
 
   (* Device mode: 0x05 *)
   (* Connection: 0x0c *)

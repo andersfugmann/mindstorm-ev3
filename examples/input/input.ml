@@ -1,3 +1,4 @@
+open Core
 open Ev3
 let addr = "00:16:53:46:E7:F0"
 
@@ -18,5 +19,10 @@ let () =
   print_endline "Connected";
 
   (*   scan conn 1 *)
-  let str = Commands.Input.get_device_list conn in
-  Printf.printf "Data\n%s\n" str;
+  let rec read () =
+    let str = Commands.Input.get_device_list conn in
+    Printf.printf "Data\n%s\n" str;
+    Thread.delay 1.0;
+    read ()
+  in
+  read ()

@@ -1,5 +1,6 @@
 open Core
 type _ elem =
+  | Raw : int -> Bytes.t elem
   | Raw8 : int elem
   | Raw16 : int elem
   | Raw32 : int elem
@@ -11,6 +12,7 @@ type _ elem =
   | String : int -> string elem
 
 let rec elem_size: type a. a elem -> int = function
+  | Raw n  -> n
   | Raw8   -> 1
   | Raw16  -> 2
   | Raw32  -> 4
@@ -26,11 +28,17 @@ type (_, _) spec =
   | Nil : ('a, 'a) spec
   | (::) : 'a elem * ('b, 'c) spec -> (('a -> 'b), 'c) spec
 
+let rec elements: type a b. (a, b) spec -> int = function
+  | Nil -> 0
+  | _ :: xs -> 1 + (elements xs)
+
 let rec length: type a b. (a, b) spec -> int = function
   | x :: xs -> elem_size x + length xs
   | Nil -> 0
 
 let rec write : type a. a elem -> Bytes.t -> int -> a -> unit = function
+  | Raw len -> fun buffer offset v ->
+    Bytes.blit ~src:v ~src_pos:0 ~dst:buffer ~dst_pos:offset ~len
   | Raw8 -> fun buffer offset v ->
     let v = match v with
       | v when v < 0 -> (255 + v) land 0xFF
@@ -59,6 +67,8 @@ let rec write : type a. a elem -> Bytes.t -> int -> a -> unit = function
   | String _n -> failwith "Cannot send strings"
 
 let rec read : type a. a elem -> string -> int -> a = function
+  | Raw len -> fun buffer offset ->
+    String.sub buffer ~pos:offset ~len |> Bytes.of_string
   | Raw8 -> fun buffer offset ->
     EndianString.LittleEndian.get_int8 buffer offset
   | Raw16 -> fun buffer offset ->
@@ -104,3 +114,12 @@ let decode spec data func =
     | Nil -> fun _ _ acc -> acc
   in
   decode spec data 0 func
+
+let return_arg_offsets spec =
+  let rec inner: type a b. int -> (a, b) spec -> int list = fun offset -> function
+    | x :: xs ->
+      let size = elem_size x in
+      0x60 + offset :: inner (offset + size) xs
+    | Nil -> []
+  in
+  inner 0 spec
