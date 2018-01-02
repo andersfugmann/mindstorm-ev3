@@ -1,3 +1,4 @@
+open Core
 type _ elem =
   | Raw8 : int elem
   | Raw16 : int elem
@@ -7,7 +8,7 @@ type _ elem =
   | Data32 : int elem
   | Float : float elem
   | Array : 'a elem * int -> 'a array elem
-  | String : string elem
+  | String : int -> string elem
 
 let rec elem_size: type a. a elem -> int = function
   | Raw8   -> 1
@@ -19,7 +20,7 @@ let rec elem_size: type a. a elem -> int = function
   | Float -> elem_size Raw32 + 1
   | Array (arr_type, len) ->
     elem_size arr_type * len
-  | String -> failwith "Length of strings are undefined"
+  | String n -> n + 1 (* Zero terminated *)
 
 type (_, _) spec =
   | Nil : ('a, 'a) spec
@@ -39,7 +40,7 @@ let rec write : type a. a elem -> Bytes.t -> int -> a -> unit = function
   | Raw16 -> fun buffer offset v ->
     EndianBytes.LittleEndian.set_int16 buffer offset v
   | Raw32 -> fun buffer offset v ->
-    EndianBytes.LittleEndian.set_int32 buffer offset (Int32.of_int v)
+    EndianBytes.LittleEndian.set_int32 buffer offset (Int32.of_int_exn v)
   | Data8 -> fun buffer offset v ->
     write Raw8 buffer offset 0x81;
     write Raw8 buffer (offset + 1) v
@@ -54,8 +55,8 @@ let rec write : type a. a elem -> Bytes.t -> int -> a -> unit = function
     EndianBytes.LittleEndian.set_float buffer (offset + 1) v
   | Array (arr_type, _len) -> fun buffer offset arr ->
     let elem_size = elem_size arr_type in
-    Array.iteri (fun i v -> write arr_type buffer (offset + i * elem_size) v) arr
-  | String -> failwith "Cannot send strings"
+    Array.iteri ~f:(fun i v -> write arr_type buffer (offset + i * elem_size) v) arr
+  | String _n -> failwith "Cannot send strings"
 
 let rec read : type a. a elem -> string -> int -> a = function
   | Raw8 -> fun buffer offset ->
@@ -64,7 +65,7 @@ let rec read : type a. a elem -> string -> int -> a = function
     EndianString.LittleEndian.get_int16 buffer offset
   | Raw32 -> fun buffer offset ->
     EndianString.LittleEndian.get_int32 buffer offset
-    |> Int32.to_int
+    |> Int32.to_int_exn
   | Data8 -> fun buffer offset ->
     assert ((read Raw8 buffer offset) = 0x81);
     read Raw8 buffer (offset + 1)
@@ -79,10 +80,9 @@ let rec read : type a. a elem -> string -> int -> a = function
     EndianString.LittleEndian.get_float buffer (offset + 1)
   | Array (arr_type, len) -> fun buffer offset ->
     let elem_size = elem_size arr_type in
-    Array.init len (fun i -> read arr_type buffer (offset + elem_size * i))
-  | String -> fun _buf _offset ->
-    (* Strings are zero terminated IIRC *)
-    "hello"
+    Array.init len ~f:(fun i -> read arr_type buffer (offset + elem_size * i))
+  | String n -> fun buffer offset ->
+    String.sub buffer ~pos:offset ~len:n
 
 let encode func spec =
   let rec encode: type a b. (a, b) spec -> (Bytes.t -> b) -> Bytes.t -> int -> a = function

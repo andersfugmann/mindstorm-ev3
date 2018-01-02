@@ -1,7 +1,23 @@
+open Core
 open Protocol
 
 exception CommandError
 exception IllegalResponse
+
+(*
+
+Protcol:
+
+For commands that return data, we must
+set byte 5 to the length of the data, and for all returned values
+specify offset in the result:
+0x60 + offset (global values. A global value is buffer space in the result)
+
+So we need to convert the reply spec into values.
+So we need to get the offsets. So strings must have a finite size.
+
+*)
+
 
 let next_message_id =
   let id = ref 0 in
@@ -57,9 +73,9 @@ module Output = struct
     | Large -> 0x08
 
   let port_bitmask ports =
-    List.sort_uniq compare ports
-    |> List.map int_of_port
-    |> List.fold_left (lor) 0
+    List.dedup_and_sort ~compare:compare ports
+    |> List.map ~f:int_of_port
+    |> List.fold_left ~f:(lor) ~init:0
 
   let set_type conn ?(layer=0) ~ports ~motor_type =
     let opcode = 0xA1 in
@@ -214,8 +230,8 @@ module Input = struct
     let reply_spec = Array (Raw8, 4) :: Raw8 :: Nil in
     let reply_func arr changed =
       Array.to_list arr
-      |> List.mapi (Printf.sprintf "%d: 0x%X")
-      |> String.concat "\n"
+      |> List.mapi ~f:(Printf.sprintf "%d: 0x%X")
+      |> String.concat ~sep:"\n"
       |> Printf.sprintf "Changed: 0x%X\n%s\n" changed
     in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
@@ -226,7 +242,7 @@ module Input = struct
   let get_name conn ?(layer=0) ~port =
     let opcode = Opcodes.device in
     let request_spec = Raw16 :: Raw8 :: Raw8 :: Raw8 :: Raw8 :: Nil in
-    let reply_spec = String :: Nil in
+    let reply_spec = String 4 :: Nil in
     let reply_func s = s in
     do_command conn ~opcode ~request_spec ~reply_spec ~reply_func
       0x00 0x15 layer port 128
